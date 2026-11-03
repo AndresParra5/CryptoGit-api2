@@ -25,12 +25,14 @@ public class CryptoService {
         return repository.findAll();
     }
 
+    @CacheEvict(value = "cotizaciones", allEntries = true)
     public ActivoCrypto guardarActivo(ActivoCrypto activo) {
         // Normalizamos el símbolo a minúsculas
         activo.setSimbolo(activo.getSimbolo().toLowerCase());
         return repository.save(activo);
     }
 
+    @Cacheable(value = "cotizaciones", key = "#id")
     public CarteraValoradaDTO valorarActivo(Long id) {
 
         System.out.println("--> [SERVICIO REAL] Petición externa a CoinGecko API para activo ID: " + id);
