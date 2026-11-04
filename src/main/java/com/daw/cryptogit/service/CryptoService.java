@@ -36,7 +36,13 @@ public class CryptoService {
                 activo.getId(),
                 activo.getSimbolo(),
                 activo.getNombre(),
-                activo.getCantidad()
+                activo.getCantidad(),
+                activo.getPrecioCompraEur(),
+                activo.getEmailAnalista(),
+                activo.getFechaAdquisicion(),
+                activo.getFechaRevision(),
+                activo.isRiesgoAceptado(),
+                activo.getEtiquetas()
         );
     }
 
@@ -46,12 +52,16 @@ public class CryptoService {
         activo.setSimbolo(dto.getSimbolo().toLowerCase());
         activo.setNombre(dto.getNombre());
         activo.setCantidad(dto.getCantidad());
-
+        activo.setPrecioCompraEur(dto.getPrecioCompraEur());
+        activo.setEmailAnalista(dto.getEmailAnalista());
+        activo.setFechaAdquisicion(dto.getFechaAdquisicion());
+        activo.setFechaRevision(dto.getFechaRevision());
+        activo.setRiesgoAceptado(dto.isRiesgoAceptado());
+        activo.setEtiquetas(dto.getEtiquetas());
         ActivoCrypto guardado = repository.save(activo);
-
-        return new ActivoCryptoDTO(guardado.getId(), guardado.getSimbolo(),
-                guardado.getNombre(), guardado.getCantidad());
+        return convertirADto(guardado);
     }
+
 
     @Cacheable(value = "cotizaciones", key = "#id")
     public CarteraValoradaDTO valorarActivo(Long id) {

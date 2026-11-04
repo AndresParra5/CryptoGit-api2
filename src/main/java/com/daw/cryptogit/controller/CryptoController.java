@@ -7,6 +7,7 @@ import com.daw.cryptogit.model.ActivoCrypto;
 import com.daw.cryptogit.service.CryptoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.repository.query.Param;
@@ -43,7 +44,7 @@ public class CryptoController {
 
     @PostMapping("/activos")
     @Operation(summary = "Registrar un nuevo activo crypto (Limpia la Caché)")
-    public ResponseEntity<ActivoCryptoDTO> crearActivo(@RequestBody CrearActivoDTO activo)
+    public ResponseEntity<ActivoCryptoDTO> crearActivo(@Valid @RequestBody CrearActivoDTO activo)
     {
         ActivoCryptoDTO nuevo = service.guardarActivo(activo);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
