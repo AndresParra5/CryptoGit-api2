@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.repository.query.Param;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -49,5 +50,25 @@ public class CryptoController {
     @Operation(summary = "Obtener valoración Mashup combinando H2 + CoinGecko API(Aplica Caché)")
     public ResponseEntity<CarteraValoradaDTO> valorarActivo(@PathVariable Long id) {
         return ResponseEntity.ok(service.valorarActivo(id));
+    }
+
+    /**
+     * COMBINACIÓN DE PARÁMETROS HTTP:
+     * 1. @PathVariable("id") -> Obligatorio en la ruta URL (/activos/{id}/...)
+     * 2. @RequestParam(defaultValue="2.0") -> Opcional tras el ? (si no se envía, toma
+     2.0 por defecto)
+     */
+    @GetMapping("/activos/{id}/valorar-comision")
+    public ResponseEntity<CarteraValoradaDTO> valorarConComision(
+            @PathVariable Long id, // Captura la variable de la URL
+            @RequestParam(defaultValue = "2.0") double porcentaje) { // Captura el Query Param opcional
+        try {
+// Delegamos la lógica al servicio
+            CarteraValoradaDTO resultado = service.valorarActivoConComision(id, porcentaje);
+            return ResponseEntity.ok(resultado); // Devuelve HTTP 200 OK con el DTO
+        } catch (IllegalArgumentException e) {
+            // Si el servicio lanza la excepción del rango (menor a 0 o mayor a 50), devolvemos un 400 Bad Request
+            return ResponseEntity.badRequest().build();
+        }
     }
 }
