@@ -1,6 +1,8 @@
 package com.daw.cryptogit.controller;
 
+import com.daw.cryptogit.dto.ActivoCryptoDTO;
 import com.daw.cryptogit.dto.CarteraValoradaDTO;
+import com.daw.cryptogit.dto.CrearActivoDTO;
 import com.daw.cryptogit.model.ActivoCrypto;
 import com.daw.cryptogit.service.CryptoService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,15 +36,16 @@ public class CryptoController {
 
     @GetMapping("/activos")
     @Operation(summary = "Listar todos los activos de la base de datos local H2")
-    public ResponseEntity<List<ActivoCrypto>> listarActivos() {
+    public ResponseEntity<List<ActivoCryptoDTO>> listarActivos() {
+
         return ResponseEntity.ok(service.obtenerTodos());
     }
 
     @PostMapping("/activos")
     @Operation(summary = "Registrar un nuevo activo crypto (Limpia la Caché)")
-    public ResponseEntity<ActivoCrypto> crearActivo(@RequestBody ActivoCrypto activo)
+    public ResponseEntity<ActivoCryptoDTO> crearActivo(@RequestBody CrearActivoDTO activo)
     {
-        ActivoCrypto nuevo = service.guardarActivo(activo);
+        ActivoCryptoDTO nuevo = service.guardarActivo(activo);
         return ResponseEntity.status(HttpStatus.CREATED).body(nuevo);
     }
 
