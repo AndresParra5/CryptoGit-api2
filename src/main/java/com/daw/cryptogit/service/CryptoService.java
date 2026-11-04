@@ -27,7 +27,17 @@ public class CryptoService {
     public List<ActivoCryptoDTO> obtenerTodos() {
 
         return repository.findAll().stream().
-                map(a -> new ActivoCryptoDTO(a.getId(), a.getSimbolo(), a.getNombre(), a.getCantidad())).toList();
+               map(this::convertirADto).toList();
+    }
+
+    // Metodo privado auxiliar en CryptoService
+    private ActivoCryptoDTO convertirADto(ActivoCrypto activo) {
+        return new ActivoCryptoDTO(
+                activo.getId(),
+                activo.getSimbolo(),
+                activo.getNombre(),
+                activo.getCantidad()
+        );
     }
 
     @CacheEvict(value = "cotizaciones", allEntries = true)
@@ -106,14 +116,12 @@ public class CryptoService {
     // Buscar activo por su ID en la BD
     public Optional<ActivoCryptoDTO> obtenerPorId(Long id) {
         return repository.findById(id)
-                .map(a -> new ActivoCryptoDTO(a.getId(), a.getSimbolo(), a.getNombre(),
-                        a.getCantidad()));
+                .map(this::convertirADto);
     }
     // Buscar activo por símbolo (ej: ?simbolo=btc)
     public Optional<ActivoCryptoDTO> obtenerPorSimbolo(String simbolo) {
         return repository.findBySimbolo(simbolo.toLowerCase())
-                .map(a -> new ActivoCryptoDTO(a.getId(), a.getSimbolo(), a.getNombre(),
-                        a.getCantidad()));
+                .map(this::convertirADto);
     }
 
 
