@@ -1,6 +1,8 @@
 package com.daw.cryptogit.service;
 
 import com.daw.cryptogit.dto.*;
+import com.daw.cryptogit.exception.ActivoNoEncontradoException;
+import com.daw.cryptogit.exception.ComisionInvalidaException;
 import com.daw.cryptogit.model.ActivoCrypto;
 import com.daw.cryptogit.repository.ActivoCryptoRepository;
 import org.springframework.cache.annotation.CacheEvict;
@@ -43,6 +45,12 @@ public class CryptoService {
         );
     }
 
+    // Metodo auxiliar privado para devolver Entidades o lanzar excepción
+    private ActivoCrypto buscarEntidadPorId(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -> new ActivoNoEncontradoException("No existe ningún activo con el ID: " + id));
+    }
+
     @CacheEvict(value = "cotizaciones", allEntries = true)
     public ActivoCryptoDTO guardarActivo(CrearActivoDTO dto) {
         ActivoCrypto activo = new ActivoCrypto();
@@ -53,7 +61,7 @@ public class CryptoService {
         activo.setEmailAnalista(dto.getEmailAnalista());
         activo.setFechaAdquisicion(dto.getFechaAdquisicion());
         activo.setFechaRevision(dto.getFechaRevision());
-        activo.setRiesgoAceptado(dto.isRiesgoAceptado());
+        activo.setRiesgoAceptado(dto.getRiesgoAceptado());
         activo.setEtiquetas(dto.getEtiquetas());
         ActivoCrypto guardado = repository.save(activo);
         return convertirADto(guardado);
@@ -96,7 +104,7 @@ public class CryptoService {
         // VALIDACIÓN DE RANGOS (Regla de negocio condicional):
         // Si la comisión es menor a 0 o mayor a 50%, lanzamos una excepción de error.
         if (porcentajeComision < 0 || porcentajeComision > 50) {
-            throw new IllegalArgumentException("Error: La comisión debe estar entre 0% y 50%.");
+            throw new ComisionInvalidaException("El porcentaje de comisión debe estar entre 0% y 50%. Valor recibido: " + porcentajeComision + "%");
         }
         // Llamamos al metodo valorarActivo(id) para obtener los datos base.
         CarteraValoradaDTO dto = valorarActivo(id);
@@ -121,29 +129,33 @@ public class CryptoService {
     }
 
     // Buscar activo por su ID en la BD
-    public Optional<ActivoCryptoDTO> obtenerPorId(Long id) {
-        return repository.findById(id)
-                .map(this::convertirADto);
+    //AHORA
+    public ActivoCryptoDTO obtenerPorId(Long id) {
+        ActivoCrypto activo = buscarEntidadPorId(id);
+        return convertirADto(activo);
     }
+
+
     // Buscar activo por símbolo (ej: ?simbolo=btc)
-    public Optional<ActivoCryptoDTO> obtenerPorSimbolo(String simbolo) {
+    public ActivoCryptoDTO obtenerPorSimbolo(String simbolo) {
         return repository.findBySimbolo(simbolo.toLowerCase())
-                .map(this::convertirADto);
+                .map(this::convertirADto)
+                .orElseThrow(() -> new ActivoNoEncontradoException("No existe ningún activo con el símbolo: " + simbolo));
     }
 
     // Reemplazo completo (PUT)
     public ActivoCryptoDTO actualizarCompleto(Long id, CrearActivoDTO dto) {
-        ActivoCrypto activoExistente = repository.findById(id).orElse(null);
-        if (activoExistente == null) {
-            return null;
-        }
+
+        ActivoCrypto activoExistente = buscarEntidadPorId(id);
+
+
         activoExistente.setNombre(dto.getNombre());
         activoExistente.setCantidad(dto.getCantidad());
         activoExistente.setPrecioCompraEur(dto.getPrecioCompraEur());
         activoExistente.setEmailAnalista(dto.getEmailAnalista());
         activoExistente.setFechaAdquisicion(dto.getFechaAdquisicion());
         activoExistente.setFechaRevision(dto.getFechaRevision());
-        activoExistente.setRiesgoAceptado(dto.isRiesgoAceptado());
+        activoExistente.setRiesgoAceptado(dto.getRiesgoAceptado());
         if (dto.getEtiquetas() != null) {
             activoExistente.setEtiquetas(dto.getEtiquetas());
         }
@@ -153,10 +165,10 @@ public class CryptoService {
 
     // Modificación parcial (PATCH)
     public ActivoCryptoDTO actualizarParcial(Long id, PatchActivoDTO dto) {
-        ActivoCrypto activoExistente = repository.findById(id).orElse(null);
-        if (activoExistente == null) {
-            return null;
-        }
+
+        ActivoCrypto activoExistente = buscarEntidadPorId(id);
+
+
         if (dto.getNombre() != null) activoExistente.setNombre(dto.getNombre());
         if (dto.getCantidad() != null) activoExistente.setCantidad(dto.getCantidad());
         if (dto.getPrecioCompraEur() != null)
@@ -177,9 +189,8 @@ public class CryptoService {
 
     // Borrado por ID (DELETE)
     public void eliminar(Long id) {
-        if (repository.existsById(id)) {
-            repository.deleteById(id);
-        }
+        ActivoCrypto activoExistente = buscarEntidadPorId(id);
+        repository.delete(activoExistente);
     }
 
 }
